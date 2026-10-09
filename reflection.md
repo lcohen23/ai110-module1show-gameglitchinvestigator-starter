@@ -16,9 +16,9 @@ At first glance the game looked completely normal. The bugs only showed up once 
    - *Expected:* A guess that's too low should tell me to go higher, and a guess that's too high should tell me to go lower.
    - *Actual:* It's the opposite. A low guess tells me to go lower, and a high guess tells me to go higher.
 
-2. **The first guess isn't counted as an attempt.**
+2. **The attempts counter doesn't go down after the first guess.**
    - *Expected:* Every guess, including the first, uses up one attempt.
-   - *Actual:* The first guess doesn't count, so I actually get one extra attempt.
+   - *Actual:* The "attempts left" counter doesn't change after my first guess. It always seems to be one guess behind.
 
 3. **Invalid and empty inputs use up attempts.**
    - *Expected:* Empty or non-number inputs should show an error without costing an attempt.

@@ -1,7 +1,7 @@
 import random
 import streamlit as st
 
-from logic_utils import get_range_for_difficulty, parse_guess, check_guess, update_score
+from logic_utils import get_range_for_difficulty, parse_guess, check_guess, update_score, attempts_left, get_attempt_limit
 
 st.set_page_config(page_title="Glitchy Guesser", page_icon="🎮")
 
@@ -16,12 +16,7 @@ difficulty = st.sidebar.selectbox(
     index=1,
 )
 
-attempt_limit_map = {
-    "Easy": 6,
-    "Normal": 8,
-    "Hard": 5,
-}
-attempt_limit = attempt_limit_map[difficulty]
+attempt_limit = get_attempt_limit(difficulty)
 
 low, high = get_range_for_difficulty(difficulty)
 
@@ -31,9 +26,9 @@ st.sidebar.caption(f"Attempts allowed: {attempt_limit}")
 if "secret" not in st.session_state:
     st.session_state.secret = random.randint(low, high)
 
-# FIXME: Logic breaks here - attempts starts at 1 instead of 0, so the counter is off by one and the first guess doesn't seem to count
+# FIX: attempts starts at 0 so no attempts are used before the first guess
 if "attempts" not in st.session_state:
-    st.session_state.attempts = 1
+    st.session_state.attempts = 0
 
 if "score" not in st.session_state:
     st.session_state.score = 0
@@ -46,18 +41,30 @@ if "history" not in st.session_state:
 
 st.subheader("Make a guess")
 
-# FIXME: Logic breaks here - this is drawn before the submit code below adds 1 to attempts, so the counter lags one guess behind
-st.info(
-    f"Guess a number between 1 and 100. "
-    f"Attempts left: {attempt_limit - st.session_state.attempts}"
-)
+# FIX: reserve a spot for the attempts box and fill it in after the guess is
+# processed, so the counter isn't one guess behind
+attempts_box = st.empty()
 
-with st.expander("Developer Debug Info"):
-    st.write("Secret:", st.session_state.secret)
-    st.write("Attempts:", st.session_state.attempts)
-    st.write("Score:", st.session_state.score)
-    st.write("Difficulty:", difficulty)
-    st.write("History:", st.session_state.history)
+
+def show_attempts_left():
+    attempts_box.info(
+        f"Guess a number between 1 and 100. "
+        f"Attempts left: {attempts_left(attempt_limit, st.session_state.attempts)}"
+    )
+
+
+# FIX: like the attempts box, fill the debug info in after the guess is
+# processed so it doesn't show the previous guess's values
+debug_box = st.container()
+
+
+def show_debug_info():
+    with debug_box.expander("Developer Debug Info"):
+        st.write("Secret:", st.session_state.secret)
+        st.write("Attempts:", st.session_state.attempts)
+        st.write("Score:", st.session_state.score)
+        st.write("Difficulty:", difficulty)
+        st.write("History:", st.session_state.history)
 
 raw_guess = st.text_input(
     "Enter your guess:",
@@ -83,6 +90,8 @@ if st.session_state.status != "playing":
         st.success("You already won. Start a new game to play again.")
     else:
         st.error("Game over. Start a new game to try again.")
+    show_attempts_left()
+    show_debug_info()
     st.stop()
 
 if submit:
@@ -127,6 +136,9 @@ if submit:
                     f"The secret was {st.session_state.secret}. "
                     f"Score: {st.session_state.score}"
                 )
+
+show_attempts_left()
+show_debug_info()
 
 st.divider()
 st.caption("Built by an AI that claims this code is production-ready.")

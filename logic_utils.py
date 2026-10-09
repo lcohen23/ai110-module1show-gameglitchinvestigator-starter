@@ -1,12 +1,25 @@
 def get_range_for_difficulty(difficulty: str):
     """Return (low, high) inclusive range for a given difficulty."""
+    # FIX: Normal (1-100) had a bigger range than Hard (1-50). Ranges now grow with difficulty.
     if difficulty == "Easy":
         return 1, 20
     if difficulty == "Normal":
-        return 1, 100
-    if difficulty == "Hard":
         return 1, 50
-    return 1, 100
+    if difficulty == "Hard":
+        return 1, 100
+    return 1, 50
+
+
+def get_attempt_limit(difficulty: str):
+    """Return how many guesses are allowed for a given difficulty."""
+    # FIX: Normal (8) allowed more attempts than Easy (6). Attempts now shrink with difficulty.
+    if difficulty == "Easy":
+        return 8
+    if difficulty == "Normal":
+        return 6
+    if difficulty == "Hard":
+        return 5
+    return 6
 
 
 def parse_guess(raw: str):
@@ -73,3 +86,8 @@ def update_score(current_score: int, outcome: str, attempt_number: int):
         return current_score - 5
 
     return current_score
+
+
+def attempts_left(attempt_limit: int, attempts_used: int):
+    """Return how many attempts the player has left."""
+    return attempt_limit - attempts_used
