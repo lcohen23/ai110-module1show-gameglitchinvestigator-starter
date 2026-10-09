@@ -25,28 +25,38 @@ It wrote the code, ran away, and now the game is unplayable.
 
 ## 📝 Document Your Experience
 
-- [ ] Describe the game's purpose.
-- [ ] Detail which bugs you found.
-- [ ] Explain what fixes you applied.
+- [x] **Purpose:** A number guessing game. You guess a secret number and get "higher" or "lower" hints, with a limited number of attempts depending on difficulty.
+- [x] **Bugs found:**
+  - Hints were reversed (a low guess said "Go LOWER").
+  - The attempts counter was one guess behind, and invalid or empty inputs still used up attempts.
+  - Difficulty settings were out of order: Normal had a bigger range than Hard and more attempts than Easy.
+  - New Game only reset the secret number, and switching difficulty didn't restart the game.
+- [x] **Fixes applied:**
+  - Moved the game logic from `app.py` into `logic_utils.py`.
+  - Swapped the hint messages in `check_guess`.
+  - Made ranges grow and attempts shrink with difficulty (Easy 1–20 / 8, Normal 1–50 / 6, Hard 1–100 / 5).
+  - Made the guess prompt show the current difficulty's range instead of always "1 and 100".
+  - New Game and switching difficulty now fully reset the game, with a secret in the right range.
+  - Fixed the attempts counter and debug panel so they update on the same click as the guess.
+  - Added pytest cases for the logic fixes (hints, difficulty settings, attempts left).
 
 ## 📸 Demo Walkthrough
 
 Describe your fixed game in numbered steps so a reader can follow along without watching a video:
 
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+1. Start a game on Normal (range 1–50, 6 attempts). The secret is 32. Attempts left: 6.
+2. Guess 20 → "Go HIGHER!" Score: -5, attempts left: 5.
+3. Guess 40 → "Go LOWER!" Score: 0, attempts left: 4.
+4. Guess 32 → "Correct!" with balloons. "You won! The secret was 32. Final score: 60"
+5. The game ends. Click New Game to play again.
 
 **Screenshot** *(optional)*: <!-- Insert a screenshot of your fixed, winning game here -->
 
 ## 🧪 Test Results
 
 ```
-# Paste your pytest output here, e.g.:
-# pytest tests/
-# ========================= X passed in 0.XXs =========================
+$ py -m pytest
+7 passed in 0.01s
 ```
 
 ## 🚀 Stretch Features

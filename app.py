@@ -23,8 +23,25 @@ low, high = get_range_for_difficulty(difficulty)
 st.sidebar.caption(f"Range: {low} to {high}")
 st.sidebar.caption(f"Attempts allowed: {attempt_limit}")
 
+
+
+# FIX (with Claude Code): New Game only reset the secret (always from 1-100),
+# and switching difficulty didn't restart the game. Both now use this reset.
+def start_new_game():
+    st.session_state.secret = random.randint(low, high)
+    st.session_state.attempts = 0
+    st.session_state.score = 0
+    st.session_state.status = "playing"
+    st.session_state.history = []
+    st.session_state.difficulty = difficulty
+
+
 if "secret" not in st.session_state:
     st.session_state.secret = random.randint(low, high)
+
+if st.session_state.get("difficulty", difficulty) != difficulty:
+    start_new_game()
+st.session_state.difficulty = difficulty
 
 # FIX (with Claude Code): attempts starts at 0 so no attempts are used before the first guess
 if "attempts" not in st.session_state:
@@ -48,7 +65,8 @@ attempts_box = st.empty()
 
 def show_attempts_left():
     attempts_box.info(
-        f"Guess a number between 1 and 100. "
+        # FIX (with Claude Code): prompt always said "1 and 100", now uses the difficulty's range
+        f"Guess a number between {low} and {high}. "
         f"Attempts left: {attempts_left(attempt_limit, st.session_state.attempts)}"
     )
 
@@ -80,8 +98,7 @@ with col3:
     show_hint = st.checkbox("Show hint", value=True)
 
 if new_game:
-    st.session_state.attempts = 0
-    st.session_state.secret = random.randint(1, 100)
+    start_new_game()
     st.success("New game started.")
     st.rerun()
 

@@ -73,13 +73,15 @@ I used Claude Code in VS Code.
   and what it showed you about your code.
 - Did AI help you design or understand any tests? How?
 
-A bug counted as fixed when a pytest case for it passed and the game behaved correctly when I played it. I ran `pytest` after each fix, and all 7 tests passed at the end. One test checks that harder difficulties have bigger ranges and fewer attempts. It showed me the new ranges and attempt limits were in the right order. Claude also pointed out that the starter tests compared `check_guess` to a single string, even though it returns an (outcome, message) pair. They only checked the outcome, which was never the problem, so they couldn't catch the reversed hints. That's why my new test also checks the hint message.
+A bug counted as fixed when a pytest case for it passed and the game behaved correctly when I played it. I ran `pytest` after each fix, and all 7 tests passed at the end. One test checks that harder difficulties have bigger ranges and fewer attempts. It showed me the new ranges and attempt limits were in the right order. Claude also pointed out that the starter tests compared `check_guess` to a single string, even though it returns an (outcome, message) pair. They only checked the outcome, which was never the problem, so they couldn't catch the reversed hints. That's why my new test also checks the hint message. Some fixes, like the guess prompt, New Game, and switching difficulty, are UI behavior, so I checked those by playing the game instead of with pytest.
 
 ---
 
 ## 4. What did you learn about Streamlit and state?
 
 - How would you explain Streamlit "reruns" and session state to a friend who has never used Streamlit?
+
+Every time you click or type something, Streamlit reruns the whole script from top to bottom. Normal variables get reset on every rerun, so anything that needs to last, like the secret number or attempts, has to go in `st.session_state`. Because the page is drawn in order, anything shown above the code that updates the state shows the old value. That's what caused the attempts counter to lag one guess behind.
 
 ---
 
@@ -89,3 +91,9 @@ A bug counted as fixed when a pytest case for it passed and the game behaved cor
   - This could be a testing habit, a prompting strategy, or a way you used Git.
 - What is one thing you would do differently next time you work with AI on a coding task?
 - In one or two sentences, describe how this project changed the way you think about AI generated code.
+
+**Habit to reuse:** Writing a small pytest case for each fix, and also checking it in the actual app, since some bugs (like the lagging counter) only show up when you play.
+
+**What I'd do differently:** Test the AI's fix myself before accepting it. Claude said the counter was fixed, but I only found the debug panel lag by playing the game.
+
+**How my thinking changed:** AI-generated code can look fine and still be full of logic bugs, so I now treat it as a draft that needs testing, not finished code.
