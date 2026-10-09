@@ -15,37 +15,68 @@ At first glance the game looked completely normal. The bugs only showed up once 
 1. **Hints are reversed.**
    - *Expected:* A guess that's too low should tell me to go higher, and a guess that's too high should tell me to go lower.
    - *Actual:* It's the opposite. A low guess tells me to go lower, and a high guess tells me to go higher.
+   - *Cause:* `check_guess` returned "Go HIGHER!" for "Too High" and "Go LOWER!" for "Too Low".
 
 2. **The attempts counter doesn't go down after the first guess.**
    - *Expected:* Every guess, including the first, uses up one attempt.
    - *Actual:* The "attempts left" counter doesn't change after my first guess. It always seems to be one guess behind.
+   - *Cause:* `attempts` started at 1 instead of 0, and the "Attempts left" box was drawn before the submit code added 1 to `attempts`.
 
 3. **Invalid and empty inputs use up attempts.**
    - *Expected:* Empty or non-number inputs should show an error without costing an attempt.
    - *Actual:* Any input, even an empty one, makes the "attempts left" counter go down. Non-number inputs never trigger a game over, but they still count. If I use up all my attempts on non-numbers and then enter a number, I only get one real guess.
+   - *Cause:* `attempts += 1` ran before `parse_guess` checked whether the input was valid.
 
 4. **The "attempts left" counter can go negative.**
    - *Expected:* The counter should stop at 0.
    - *Actual:* The counter keeps going below 0.
+   - *Cause:* Attempts left was calculated as `attempt_limit - attempts` with no minimum, and invalid inputs never set the game to "lost".
 
 5. **Difficulty settings don't make sense.**
    - *Expected:* Harder modes should have a bigger range and fewer attempts.
-   - *Actual:* Normal has the biggest range (1 to 100), while Hard is only 1 to 50. Normal also gives more attempts (8) than Easy (6).
+   - *Actual:* Normal has the biggest range (1 to 100), while Hard is only 1 to 50. Normal also gives more attempts (8) than Easy (6). The prompt always says "between 1 and 100".
+   - *Cause:* `get_range_for_difficulty` and `attempt_limit_map` had the values out of order, and the prompt text was hard-coded.
 
 6. **New Game doesn't reset the game.**
    - *Expected:* Clicking New Game should start completely fresh.
-   - *Actual:* The only thing it resets is the secret number. Everything else carries over from the old game.
+   - *Actual:* It picks a new secret, but a finished game stays on "Game over" and the history carries over. The new secret is always from 1 to 100, even on Easy.
+   - *Cause:* The New Game code only reset `attempts` and `secret` (using `randint(1, 100)`). It never reset `status` or `history`, so `st.stop()` still ended the page.
+
+7. **Hints flip on even-numbered attempts** *(found later, while checking my fixes)*.
+   - *Expected:* The same guess should always get the same hint.
+   - *Actual:* Guessing 9 with a secret of 50 said "Go HIGHER!" on attempt 1 and "Go LOWER!" on attempt 2.
+   - *Cause:* On every even-numbered attempt, `app.py` turned the secret into text, so `check_guess` compared `"9"` to `"50"` alphabetically, and `"9"` comes after `"50"`.
+
+8. **Scoring is inconsistent** *(found later, while checking my fixes)*.
+   - *Expected:* Every wrong guess should cost the same points, and a first-guess win should be worth the most.
+   - *Actual:* Guessing 70 with a secret of 50 gave +5 on attempt 2, then -5 for the same guess on attempt 3.
+   - *Cause:* `update_score` added 5 points for "Too High" on even-numbered attempts, and the win formula had an extra `+ 1`, so even a first-guess win lost points.
+
+**Game trace (original starter code, Normal mode, secret set to 50):**
+
+```
+Load game                -> sidebar "Attempts allowed: 8", box "Attempts left: 7"
+Guess 30                 -> "Go LOWER!"   | Attempts left: 7
+Guess 70                 -> "Go HIGHER!"  | Attempts left: 6
+New game, submit "abc" 9 times -> "That is not a number." | Attempts left: -1, still playing
+Select Hard              -> sidebar "Range: 1 to 50", prompt "Guess a number between 1 and 100"
+Select Easy              -> sidebar "Attempts allowed: 6" (Normal has 8)
+Lose on Easy, click New Game -> secret 69, still "Game over", history kept
+New game, guess 70 twice -> score +5, then 0 (same wrong guess, different points)
+```
 
 **Bug Reproduction Log**
 
 | Input Used | Expected Behavior | Actual Behavior | Console Error / Output |
 |------------|-------------------|-----------------|------------------------|
-| Guess lower than the secret | "Go HIGHER" hint | "Go LOWER" hint shown | none |
-| First guess of a game | Attempts left goes down by 1 | Attempts left doesn't change | none |
-| Empty input or `abc` | Error, no attempt used | Error, and an attempt is used | none |
-| Non-number inputs after attempts hit 0 | Counter stops at 0 | Counter goes negative | none |
-| Switch to Hard mode | Hardest range (bigger than Normal) | Range is 1–50, smaller than Normal's 1–100 | none |
-| Click New Game mid-game | Everything resets | Only the secret changes | none |
+| Secret 50, guess 30 | "Go HIGHER!" hint | "Go LOWER!" hint shown | none |
+| First guess of a game (30) | Attempts left goes from 8 to 7 | Starts at 7 and stays at 7 | none |
+| Submit `abc` | Error, attempts left stays the same | "That is not a number.", and attempts left goes down by 1 | none |
+| Submit `abc` 9 times on Normal | Counter stops at 0 | "Attempts left: -1", game still playing | none |
+| Select Hard | Bigger range than Normal's 1–100 | "Range: 1 to 50", prompt still says "1 and 100" | none |
+| Lose on Easy, click New Game | Fresh game with a secret from 1–20 | Secret 69, still "Game over" | none |
+| Secret 50, guess 9 twice | "Go HIGHER!" both times | "Go HIGHER!" then "Go LOWER!" | none |
+| Secret 50, guess 70 twice | Score -5, then -10 | Score +5, then 0 | none |
 
 
 ---
@@ -73,7 +104,7 @@ I used Claude Code in VS Code.
   and what it showed you about your code.
 - Did AI help you design or understand any tests? How?
 
-A bug counted as fixed when a pytest case for it passed and the game behaved correctly when I played it. I ran `pytest` after each fix, and all 7 tests passed at the end. One test checks that harder difficulties have bigger ranges and fewer attempts. It showed me the new ranges and attempt limits were in the right order. Claude also pointed out that the starter tests compared `check_guess` to a single string, even though it returns an (outcome, message) pair. They only checked the outcome, which was never the problem, so they couldn't catch the reversed hints. That's why my new test also checks the hint message. Some fixes, like the guess prompt, New Game, and switching difficulty, are UI behavior, so I checked those by playing the game instead of with pytest.
+A bug counted as fixed when a pytest case for it passed and the game behaved correctly when I played it. I ran `pytest` after each fix, and all 12 tests passed at the end. One test checks that harder difficulties have bigger ranges and fewer attempts. It showed me the new ranges and attempt limits were in the right order. Claude also pointed out that the starter tests compared `check_guess` to a single string, even though it returns an (outcome, message) pair. They only checked the outcome, which was never the problem, so they couldn't catch the reversed hints. That's why my new test also checks the hint message. Some fixes, like the guess prompt, New Game, and switching difficulty, are UI behavior, so I checked those by playing the game instead of with pytest. For the even-attempt hint bug and invalid inputs, Claude used Streamlit's built-in test runner (`AppTest`) to write tests that click Submit in a simulated game, which showed the same guess now gets the same hint every time.
 
 ---
 

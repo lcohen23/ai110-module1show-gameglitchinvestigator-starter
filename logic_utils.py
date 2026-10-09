@@ -58,34 +58,24 @@ def check_guess(guess, secret):
 
     # FIX (with Claude Code): moved from app.py into logic_utils.py.
     # Hint messages were swapped. A guess that's too high should say go lower, and vice versa.
-    try:
-        if guess > secret:
-            return "Too High", "📉 Go LOWER!"
-        else:
-            return "Too Low", "📈 Go HIGHER!"
-    except TypeError:
-        g = str(guess)
-        if g == secret:
-            return "Win", "🎉 Correct!"
-        if g > secret:
-            return "Too High", "📉 Go LOWER!"
-        return "Too Low", "📈 Go HIGHER!"
+    # The text-comparison fallback was removed since the secret is always a number now.
+    if guess > secret:
+        return "Too High", "📉 Go LOWER!"
+    return "Too Low", "📈 Go HIGHER!"
 
 
 def update_score(current_score: int, outcome: str, attempt_number: int):
     """Update score based on outcome and attempt number."""
+    # FIX (with Claude Code): a "Too High" guess added 5 points on even attempts,
+    # and a first-guess win was only worth 80 because of an extra +1.
+    # Now every wrong guess costs 5, and a win is worth 100 minus 10 per extra guess.
     if outcome == "Win":
-        points = 100 - 10 * (attempt_number + 1)
+        points = 100 - 10 * (attempt_number - 1)
         if points < 10:
             points = 10
         return current_score + points
 
-    if outcome == "Too High":
-        if attempt_number % 2 == 0:
-            return current_score + 5
-        return current_score - 5
-
-    if outcome == "Too Low":
+    if outcome in ("Too High", "Too Low"):
         return current_score - 5
 
     return current_score
@@ -93,4 +83,5 @@ def update_score(current_score: int, outcome: str, attempt_number: int):
 
 def attempts_left(attempt_limit: int, attempts_used: int):
     """Return how many attempts the player has left."""
-    return attempt_limit - attempts_used
+    # FIX (with Claude Code): the counter could go negative. It now stops at 0.
+    return max(0, attempt_limit - attempts_used)

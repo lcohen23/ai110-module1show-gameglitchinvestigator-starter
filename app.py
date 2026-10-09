@@ -112,22 +112,20 @@ if st.session_state.status != "playing":
     st.stop()
 
 if submit:
-    st.session_state.attempts += 1
-
     ok, guess_int, err = parse_guess(raw_guess)
 
     if not ok:
-        st.session_state.history.append(raw_guess)
+        # FIX (with Claude Code): invalid or empty input used to cost an attempt
+        # (attempts went up before the input was checked). Now only valid guesses count.
         st.error(err)
     else:
+        st.session_state.attempts += 1
         st.session_state.history.append(guess_int)
 
-        if st.session_state.attempts % 2 == 0:
-            secret = str(st.session_state.secret)
-        else:
-            secret = st.session_state.secret
-
-        outcome, message = check_guess(guess_int, secret)
+        # FIX (with Claude Code): the secret used to be turned into text on every
+        # even-numbered attempt, so guesses were compared alphabetically ("9" > "50").
+        # Now the guess is always compared to the real number.
+        outcome, message = check_guess(guess_int, st.session_state.secret)
 
         if show_hint:
             st.warning(message)
