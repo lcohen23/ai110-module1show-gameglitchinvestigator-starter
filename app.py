@@ -33,6 +33,7 @@ def check_guess(guess, secret):
     if guess == secret:
         return "Win", "🎉 Correct!"
 
+    # FIXME: Logic breaks here - hint messages are swapped ("Too High" says "Go HIGHER", "Too Low" says "Go LOWER")
     try:
         if guess > secret:
             return "Too High", "📈 Go HIGHER!"
@@ -92,6 +93,7 @@ st.sidebar.caption(f"Attempts allowed: {attempt_limit}")
 if "secret" not in st.session_state:
     st.session_state.secret = random.randint(low, high)
 
+# FIXME: Logic breaks here - attempts starts at 1 instead of 0, so the counter is off by one and the first guess doesn't seem to count
 if "attempts" not in st.session_state:
     st.session_state.attempts = 1
 
@@ -106,6 +108,7 @@ if "history" not in st.session_state:
 
 st.subheader("Make a guess")
 
+# FIXME: Logic breaks here - this is drawn before the submit code below adds 1 to attempts, so the counter lags one guess behind
 st.info(
     f"Guess a number between 1 and 100. "
     f"Attempts left: {attempt_limit - st.session_state.attempts}"
