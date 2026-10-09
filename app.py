@@ -26,7 +26,7 @@ st.sidebar.caption(f"Attempts allowed: {attempt_limit}")
 if "secret" not in st.session_state:
     st.session_state.secret = random.randint(low, high)
 
-# FIX: attempts starts at 0 so no attempts are used before the first guess
+# FIX (with Claude Code): attempts starts at 0 so no attempts are used before the first guess
 if "attempts" not in st.session_state:
     st.session_state.attempts = 0
 
@@ -41,7 +41,7 @@ if "history" not in st.session_state:
 
 st.subheader("Make a guess")
 
-# FIX: reserve a spot for the attempts box and fill it in after the guess is
+# FIX (with Claude Code): reserve a spot for the attempts box and fill it in after the guess is
 # processed, so the counter isn't one guess behind
 attempts_box = st.empty()
 
@@ -53,7 +53,7 @@ def show_attempts_left():
     )
 
 
-# FIX: like the attempts box, fill the debug info in after the guess is
+# FIX (with Claude Code, after I noticed history lagging in the game): like the attempts box, fill the debug info in after the guess is
 # processed so it doesn't show the previous guess's values
 debug_box = st.container()
 

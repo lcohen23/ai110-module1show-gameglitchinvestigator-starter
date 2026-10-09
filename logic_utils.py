@@ -1,6 +1,7 @@
 def get_range_for_difficulty(difficulty: str):
     """Return (low, high) inclusive range for a given difficulty."""
-    # FIX: Normal (1-100) had a bigger range than Hard (1-50). Ranges now grow with difficulty.
+    # FIX (with Claude Code): moved from app.py into logic_utils.py.
+    # Normal (1-100) had a bigger range than Hard (1-50). Ranges now grow with difficulty.
     if difficulty == "Easy":
         return 1, 20
     if difficulty == "Normal":
@@ -12,7 +13,8 @@ def get_range_for_difficulty(difficulty: str):
 
 def get_attempt_limit(difficulty: str):
     """Return how many guesses are allowed for a given difficulty."""
-    # FIX: Normal (8) allowed more attempts than Easy (6). Attempts now shrink with difficulty.
+    # FIX (with Claude Code): moved the attempt limits from app.py into this function.
+    # Normal (8) allowed more attempts than Easy (6). Attempts now shrink with difficulty.
     if difficulty == "Easy":
         return 8
     if difficulty == "Normal":
@@ -54,7 +56,8 @@ def check_guess(guess, secret):
     if guess == secret:
         return "Win", "🎉 Correct!"
 
-    # FIX: hint messages were swapped. A guess that's too high should say go lower, and vice versa.
+    # FIX (with Claude Code): moved from app.py into logic_utils.py.
+    # Hint messages were swapped. A guess that's too high should say go lower, and vice versa.
     try:
         if guess > secret:
             return "Too High", "📉 Go LOWER!"

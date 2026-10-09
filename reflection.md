@@ -56,6 +56,14 @@ At first glance the game looked completely normal. The bugs only showed up once 
 - Give one example of an AI suggestion that was correct (including what the AI suggested and how you verified the result).
 - Give one example of an AI suggestion you did not accept as written (including what the AI suggested, why you rejected or changed it, and how you verified your version). It does not have to be a suggestion that was wrong: over-engineered, out of scope, harder to read, or a poor fit for this codebase all count.
 
+I used Claude Code in VS Code.
+
+**Correct suggestion:** Claude found that `check_guess` had its hint messages swapped and suggested moving it into `logic_utils.py` and flipping them. This was correct. I verified it with a pytest case (60 vs. 50 returns "Too High" with a "Go LOWER" hint) and by playing the game.
+
+**Incorrect/misleading suggestion:** For the attempts counter, Claude started attempts at 0 and made the counter update after each guess, then said it was fixed. When I played, the history in the debug panel still didn't update until a later click. Claude simulated clicks and found the saved data was correct, but the debug panel was drawn before the guess was processed. So the first fix was incomplete. After the second fix, I verified that the counter and the debug panel both update on the same click.
+
+**Not accepted as written:** For the attempts counter bug, Claude moved the math into a new `attempts_left` function in `logic_utils.py` and added a test for it. I questioned whether this really counted as fixing core logic, since the function was just one subtraction and the real bug was in the order the page was drawn. Claude agreed, so I kept that fix but chose the difficulty settings bug as my second core logic fix instead. I verified it with tests checking that harder difficulties have bigger ranges and fewer attempts.
+
 ---
 
 ## 3. Debugging and testing your fixes
@@ -64,6 +72,8 @@ At first glance the game looked completely normal. The bugs only showed up once 
 - Describe at least one test you ran (manual or using pytest)  
   and what it showed you about your code.
 - Did AI help you design or understand any tests? How?
+
+A bug counted as fixed when a pytest case for it passed and the game behaved correctly when I played it. I ran `pytest` after each fix, and all 7 tests passed at the end. One test checks that harder difficulties have bigger ranges and fewer attempts. It showed me the new ranges and attempt limits were in the right order. Claude also pointed out that the starter tests compared `check_guess` to a single string, even though it returns an (outcome, message) pair. They only checked the outcome, which was never the problem, so they couldn't catch the reversed hints. That's why my new test also checks the hint message.
 
 ---
 
