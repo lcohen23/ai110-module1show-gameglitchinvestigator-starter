@@ -8,15 +8,45 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
 - List at least two concrete bugs you noticed at the start  
   (for example: "the hints were backwards").
 
+At first glance the game looked completely normal. The bugs only showed up once I started playing.
+
+**Bugs I noticed:**
+
+1. **Hints are reversed.**
+   - *Expected:* A guess that's too low should tell me to go higher, and a guess that's too high should tell me to go lower.
+   - *Actual:* It's the opposite. A low guess tells me to go lower, and a high guess tells me to go higher.
+
+2. **The first guess isn't counted as an attempt.**
+   - *Expected:* Every guess, including the first, uses up one attempt.
+   - *Actual:* The first guess doesn't count, so I actually get one extra attempt.
+
+3. **Invalid and empty inputs use up attempts.**
+   - *Expected:* Empty or non-number inputs should show an error without costing an attempt.
+   - *Actual:* Any input, even an empty one, makes the "attempts left" counter go down. Non-number inputs never trigger a game over, but they still count. If I use up all my attempts on non-numbers and then enter a number, I only get one real guess.
+
+4. **The "attempts left" counter can go negative.**
+   - *Expected:* The counter should stop at 0.
+   - *Actual:* The counter keeps going below 0.
+
+5. **Difficulty settings don't make sense.**
+   - *Expected:* Harder modes should have a bigger range and fewer attempts.
+   - *Actual:* Normal has the biggest range (1 to 100), while Hard is only 1 to 50. Normal also gives more attempts (8) than Easy (6).
+
+6. **New Game doesn't reset the game.**
+   - *Expected:* Clicking New Game should start completely fresh.
+   - *Actual:* The only thing it resets is the secret number. Everything else carries over from the old game.
+
 **Bug Reproduction Log**
 
-Document at least 3 bugs you found. Add rows as needed.
+| Input Used | Expected Behavior | Actual Behavior | Console Error / Output |
+|------------|-------------------|-----------------|------------------------|
+| Guess lower than the secret | "Go HIGHER" hint | "Go LOWER" hint shown | none |
+| First guess of a game | Attempts left goes down by 1 | Attempts left doesn't change | none |
+| Empty input or `abc` | Error, no attempt used | Error, and an attempt is used | none |
+| Non-number inputs after attempts hit 0 | Counter stops at 0 | Counter goes negative | none |
+| Switch to Hard mode | Hardest range (bigger than Normal) | Range is 1–50, smaller than Normal's 1–100 | none |
+| Click New Game mid-game | Everything resets | Only the secret changes | none |
 
-| Input | Expected Behavior | Actual Behavior | Console Output / Error |
-|-------|-------------------|-----------------|------------------------|
-| | | | |
-| | | | |
-| | | | |
 
 ---
 
